@@ -105,6 +105,18 @@ inline vec3 reflect(const vec3 &v, const vec3 &n) {
     return v - 2*dot(v, n)*n;
 }
 
+// Given a ray uv, which contacts with the surface of normal vector n at its end point,
+// returns a ray originated at the contact point and going toward the refracted direction.
+// The ratio of refractive indices of the source to the material is given as eta_ratio.
+// 
+// uv and n *MUST BE* unit vectors.
+inline vec3 refract(const vec3 &uv, const vec3 &n, double eta_ratio) {
+    auto cos_theta = fmin(dot(-uv, n), 1.0);
+    vec3 r_out_perp = eta_ratio * (uv + cos_theta*n);
+    vec3 r_out_parallel = -sqrt(fabs(1.0 - r_out_perp.length_squared())) * n;
+    return r_out_perp + r_out_parallel;
+}
+
 inline vec3 unit_vector(vec3 v) {
     return v / v.length();
 }
