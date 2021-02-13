@@ -1,33 +1,17 @@
+#include "rtweekend.hh"
+
 #include "color.hh"
 #include "vec3.hh"
 #include "ray.hh"
+#include "hittable_list.hh"
+#include "sphere.hh"
 
 #include <iostream>
 
-// Return a real number t, where r.origin + t*r.direction is a point that the ray hits the sphere.
-// If the ray hits the sphere at two points (i.e. penetrates the sphere), return the smallest t.
-// If the ray doesn't hit the sphere, return -1.0.
-// (Negative t is considered invalid as rays won't go backwards)
-double hit_sphere(const point3& center, double radius, const ray& r) {
-    vec3 oc = r.origin() - center;
-    auto a = r.direction().length_squared();
-    auto half_b = dot(oc, r.direction());
-    auto c = oc.length_squared() - radius*radius;
-    auto discriminant = half_b*half_b - a*c;
-
-    if (discriminant < 0) {
-        return -1.0;
-    } else {
-        return (-half_b - sqrt(discriminant)) / a;
-    }
-}
-
-color ray_color(const ray& r) {
-    auto t = hit_sphere(point3(0, 0, -1), 0.5, r);
-    if (t > 0.0) {
-        // Norm vector at the hit point
-        vec3 N = unit_vector(r.at(t) - vec3(0, 0, -1));
-        return 0.5 * color(N.x()+1, N.y()+1, N.z()+1);
+color ray_color(const ray& r, const hittable& world) {
+    hit_record rec;
+    if (world.hit(r, 0, infinity, rec)) {
+        return 0.5 * (rec.normal + color(1, 1, 1));
     }
 
     vec3 unit_direction = unit_vector(r.direction());
@@ -45,6 +29,11 @@ int main() {
     const auto aspect_ratio = 16.0 / 9.0;
     const int image_width = 400;
     const int image_height = static_cast<int>(image_width / aspect_ratio);
+
+    // World settings
+    hittable_list world;
+    world.add(make_shared<sphere>(point3(0, 0, -1), 0.5)); // Floating in the air
+    world.add(make_shared<sphere>(point3(0, -100.5, -1), 100)); // Huge sphere centered at very bottom (the earth)
 
     // Camera settings
     auto viewport_height = 2.0; // y: [-1.0, 1.0]
@@ -67,7 +56,7 @@ int main() {
             auto u = double(i) / (image_width-1);
             auto v = double(j) / (image_height-1);
             ray r(origin, lower_left_corner + u*horizontal + v*vertical - origin);
-            color pixel_color = ray_color(r);
+            color pixel_color = ray_color(r, world);
             write_color(std::cout, pixel_color);
         }
     }
