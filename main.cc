@@ -17,7 +17,10 @@ color ray_color(const ray& r, const hittable& world, int depth) {
         return color(0, 0, 0);
     }
 
-    if (world.hit(r, 0, infinity, rec)) {
+    // Reflection point of some rays are not exactly on the surface, but some rays reflect off of
+    // slightly inner point of sphere due to floting point error.
+    // To workaround this error, ignore the hits that are too close at the origin.
+    if (world.hit(r, 0.001, infinity, rec)) {
         point3 target = rec.p + rec.normal + random_in_unit_sphere();
         return 0.5 * ray_color(ray(rec.p, target - rec.p), world, depth-1);
     }
