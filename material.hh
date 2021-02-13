@@ -69,7 +69,10 @@ class dielectric : public material {
             auto sin_theta = sqrt(1.0 - cos_theta*cos_theta);
 
             vec3 direction;
-            if (refraction_ratio * sin_theta > 1.0) {
+
+            // Assuming a pixel color is sampled with multiple rays, simulate the reflectance by
+            // stochastically choosing to reflect or transmit the ray.
+            if (refraction_ratio * sin_theta > 1.0 || reflectance(cos_theta, refraction_ratio) > random_double()) {
                 // The ray can't be refracted according to Snell's law. It must be reflected.
                 direction = reflect(unit_direction, rec.normal);
             } else {
@@ -82,4 +85,11 @@ class dielectric : public material {
 
     private:
         double ir; // index of refraction
+
+        // Schlick Approximation of reflectance of a glass
+        static double reflectance(double cosine, double ref_idx) {
+            auto r0 = (1-ref_idx) / (1+ref_idx);
+            r0 = r0*r0;
+            return r0 + (1-r0)*pow((1 - cosine), 5);
+        }
 };
