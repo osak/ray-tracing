@@ -4,9 +4,10 @@
 
 class camera {
     public:
-        camera() {
-            const auto aspect_ratio = 16.0 / 9.0;
-            auto viewport_height = 2.0; // y: [-1.0, 1.0]
+        camera(double vfov, double aspect_ratio) {
+            auto theta = deg_to_rad(vfov);
+            auto h = tan(theta / 2);
+            auto viewport_height = 2.0 * h; // y: [-tan(θ/2), tan(θ/2)]
             auto viewport_width = aspect_ratio * viewport_height;
             auto focal_length = 1.0;
 
