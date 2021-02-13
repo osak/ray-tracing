@@ -1,2 +1,3 @@
-main: main.cc vec3.hh color.hh
+SRC=main.cc $(wildcard *.hh)
+main: $(SRC)
 	g++ -o$@ -O3 main.cc

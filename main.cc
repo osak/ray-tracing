@@ -63,7 +63,13 @@ int main() {
     world.add(make_shared<sphere>(point3(-1, 0, -1), -0.4, material_left));
     world.add(make_shared<sphere>(point3(1, 0, -1), 0.5, material_right));
 
-    camera cam(point3(-2, 2, 1), point3(0, 0, -1), vec3(0, 1, 0), 20, aspect_ratio);
+    point3 look_from(-2, 2, 1);
+    point3 look_at(0, 0, -1);
+    vec3 vup(0, 1, 0);
+    auto dist_to_focus = (look_from - look_at).length();
+    auto aperture = 2.0;
+    //shared_ptr<camera> cam = make_shared<ideal_camera>(look_from, look_at, vup, 20, aspect_ratio);
+    shared_ptr<camera> cam = make_shared<lens_camera>(look_from, look_at, vup, 20, aspect_ratio, aperture, dist_to_focus);
 
     // Render
     std::cout << "P3\n" << image_width << ' ' << image_height << std::endl;
@@ -77,7 +83,7 @@ int main() {
             for (int s = 0; s < samples_per_pixel; ++s) {
                 auto u = double(i + random_double()) / (image_width-1);
                 auto v = double(j + random_double()) / (image_height-1);
-                ray r = cam.get_ray(u, v);
+                ray r = cam->get_ray(u, v);
                 pixel_color += ray_color(r, world, max_depth);
             }
             write_color(std::cout, pixel_color, samples_per_pixel);
