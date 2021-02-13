@@ -6,6 +6,7 @@
 #include "hittable_list.hh"
 #include "sphere.hh"
 #include "camera.hh"
+#include "material.hh"
 
 #include <iostream>
 
@@ -21,11 +22,13 @@ color ray_color(const ray& r, const hittable& world, int depth) {
     // slightly inner point of sphere due to floting point error.
     // To workaround this error, ignore the hits that are too close at the origin.
     if (world.hit(r, 0.001, infinity, rec)) {
-        // Normalize the target point onto the surface of unit sphere so that the distribution follow
-        // Lambert's cosine law, which states that the distribution of diffused ray should be
-        // proportional to cos(φ).
-        point3 target = rec.p + rec.normal + unit_vector(random_in_unit_sphere());
-        return 0.5 * ray_color(ray(rec.p, target - rec.p), world, depth-1);
+        ray scattered;
+        color attenuation;
+        if (rec.mat_ptr->scatter(r, rec, attenuation, scattered)) {
+            return attenuation * ray_color(scattered, world, depth-1);
+        } else {
+            return color(0, 0, 0);
+        }
     }
 
     vec3 unit_direction = unit_vector(r.direction());
@@ -48,8 +51,16 @@ int main() {
 
     // World settings
     hittable_list world;
-    world.add(make_shared<sphere>(point3(0, 0, -1), 0.5)); // Floating in the air
-    world.add(make_shared<sphere>(point3(0, -100.5, -1), 100)); // Huge sphere centered at very bottom (the earth)
+
+    auto material_ground = make_shared<lambertian>(color(0.8, 0.8, 0.0));
+    auto material_center = make_shared<lambertian>(color(0.7, 0.3, 0.3));
+    auto material_left = make_shared<metal>(color(0.8, 0.8, 0.8));
+    auto material_right = make_shared<metal>(color(0.8, 0.6, 0.2));
+
+    world.add(make_shared<sphere>(point3(0, -100.5, -1), 100, material_ground));
+    world.add(make_shared<sphere>(point3(0, 0, -1), 0.5, material_center));
+    world.add(make_shared<sphere>(point3(-1, 0, -1), 0.5, material_left));
+    world.add(make_shared<sphere>(point3(1, 0, -1), 0.5, material_right));
 
     camera cam;
 

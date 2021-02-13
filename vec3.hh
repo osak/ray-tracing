@@ -44,6 +44,11 @@ class vec3 {
             return e[0]*e[0] + e[1]*e[1] + e[2]*e[2];
         }
 
+        bool near_zero() const {
+            const auto eps = 1e-8;
+            return fabs(e[0]) < eps && fabs(e[1]) < eps && fabs(e[2]) < eps;
+        }
+
         inline static vec3 random() {
             return vec3(random_double(), random_double(), random_double());
         }
@@ -94,6 +99,10 @@ inline vec3 cross(const vec3 &u, const vec3 &v) {
         u[2] * v[0] - u[0] * v[2],
         u[0] * v[1] - u[1] * v[0]
     );
+}
+
+inline vec3 reflect(const vec3 &v, const vec3 &n) {
+    return v - 2*dot(v, n)*n;
 }
 
 inline vec3 unit_vector(vec3 v) {
